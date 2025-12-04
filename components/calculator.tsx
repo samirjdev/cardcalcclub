@@ -20,6 +20,7 @@ export function Calculator({ onSave, initialPrice, initialPercentageStep }: Calc
   const [prices, setPrices] = useState<string[]>([initialPrice?.toString() || ""]);
   const [percentageStep, setPercentageStep] = useState<number>(initialPercentageStep || 5);
   const [maxPercentage, setMaxPercentage] = useState<number>(100);
+  const [minPercentage, setMinPercentage] = useState<number>(0);
   const [expertMode, setExpertMode] = useState<boolean>(false);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [saveName, setSaveName] = useState<string>("");
@@ -42,7 +43,19 @@ export function Calculator({ onSave, initialPrice, initialPercentageStep }: Calc
     // Load max percentage from localStorage
     const storedMaxPercentage = localStorage.getItem("maxPercentage");
     if (storedMaxPercentage) {
-      setMaxPercentage(parseInt(storedMaxPercentage, 10));
+      const parsed = parseInt(storedMaxPercentage, 10);
+      if (!isNaN(parsed) && parsed >= 0) {
+        setMaxPercentage(parsed);
+      }
+    }
+
+    // Load min percentage from localStorage
+    const storedMinPercentage = localStorage.getItem("minPercentage");
+    if (storedMinPercentage) {
+      const parsed = parseInt(storedMinPercentage, 10);
+      if (!isNaN(parsed) && parsed >= 0) {
+        setMinPercentage(parsed);
+      }
     }
 
     // Load expert mode from localStorage
@@ -56,6 +69,11 @@ export function Calculator({ onSave, initialPrice, initialPercentageStep }: Calc
       setMaxPercentage(e.detail);
     };
 
+    // Listen for min percentage changes
+    const handleMinPercentageChange = (e: CustomEvent<number>) => {
+      setMinPercentage(e.detail);
+    };
+
     // Listen for expert mode changes
     const handleExpertModeChange = (e: CustomEvent<boolean>) => {
       setExpertMode(e.detail);
@@ -67,10 +85,12 @@ export function Calculator({ onSave, initialPrice, initialPercentageStep }: Calc
     };
     
     window.addEventListener("maxPercentageChanged", handleMaxPercentageChange as EventListener);
+    window.addEventListener("minPercentageChanged", handleMinPercentageChange as EventListener);
     window.addEventListener("expertModeChanged", handleExpertModeChange as EventListener);
     
     return () => {
       window.removeEventListener("maxPercentageChanged", handleMaxPercentageChange as EventListener);
+      window.removeEventListener("minPercentageChanged", handleMinPercentageChange as EventListener);
       window.removeEventListener("expertModeChanged", handleExpertModeChange as EventListener);
     };
   }, [initialPrice, initialPercentageStep, price]);
@@ -83,7 +103,7 @@ export function Calculator({ onSave, initialPrice, initialPercentageStep }: Calc
         const numPrice = parseFloat(p);
         if (!isNaN(numPrice) && numPrice > 0) {
           const calcs: Array<{ percent: number; value: number }> = [];
-          for (let percent = maxPercentage; percent >= 0; percent -= percentageStep) {
+          for (let percent = maxPercentage; percent >= minPercentage; percent -= percentageStep) {
             const value = (numPrice * percent) / 100;
             calcs.push({ percent, value });
           }
@@ -106,14 +126,14 @@ export function Calculator({ onSave, initialPrice, initialPercentageStep }: Calc
       }
 
       const calcs: Array<{ percent: number; value: number }> = [];
-      for (let percent = maxPercentage; percent >= 0; percent -= percentageStep) {
+      for (let percent = maxPercentage; percent >= minPercentage; percent -= percentageStep) {
         const value = (numPrice * percent) / 100;
         calcs.push({ percent, value });
       }
       setCalculations(calcs);
       setAllCalculations([]);
     }
-  }, [price, prices, percentageStep, maxPercentage, expertMode, currentPriceIndex]);
+  }, [price, prices, percentageStep, maxPercentage, minPercentage, expertMode, currentPriceIndex]);
 
   const handleSave = () => {
     if (expertMode) {

@@ -15,6 +15,9 @@ export function Settings() {
   const [open, setOpen] = useState(false);
   const [theme, setTheme] = useState<ThemeMode>("light");
   const [maxPercentage, setMaxPercentage] = useState<number>(100);
+  const [maxPercentageInput, setMaxPercentageInput] = useState<string>("100");
+  const [minPercentage, setMinPercentage] = useState<number>(0);
+  const [minPercentageInput, setMinPercentageInput] = useState<string>("0");
   const [expertMode, setExpertMode] = useState<boolean>(false);
   const [mounted, setMounted] = useState(false);
 
@@ -34,7 +37,16 @@ export function Settings() {
     }
 
     if (storedMaxPercentage) {
-      setMaxPercentage(parseInt(storedMaxPercentage, 10));
+      const parsed = parseInt(storedMaxPercentage, 10);
+      setMaxPercentage(parsed);
+      setMaxPercentageInput(storedMaxPercentage);
+    }
+
+    const storedMinPercentage = localStorage.getItem("minPercentage");
+    if (storedMinPercentage) {
+      const parsed = parseInt(storedMinPercentage, 10);
+      setMinPercentage(parsed);
+      setMinPercentageInput(storedMinPercentage);
     }
 
     const storedExpertMode = localStorage.getItem("expertMode");
@@ -64,12 +76,64 @@ export function Settings() {
   };
 
   const handleMaxPercentageChange = (value: string) => {
-    const num = parseInt(value, 10);
-    if (!isNaN(num) && num >= 100 && num <= 500) {
-      setMaxPercentage(num);
-      localStorage.setItem("maxPercentage", num.toString());
+    // Update input value immediately to allow clearing
+    setMaxPercentageInput(value);
+    
+    // Allow empty string while typing
+    if (value === "" || value === "-") {
+      return;
+    }
+    
+    const num = parseFloat(value);
+    if (!isNaN(num) && num >= 0 && num <= 1000) {
+      const intNum = Math.round(num);
+      setMaxPercentage(intNum);
+      localStorage.setItem("maxPercentage", intNum.toString());
       // Trigger a custom event to notify calculator
-      window.dispatchEvent(new CustomEvent("maxPercentageChanged", { detail: num }));
+      window.dispatchEvent(new CustomEvent("maxPercentageChanged", { detail: intNum }));
+    }
+  };
+
+  const handleMaxPercentageBlur = () => {
+    // If empty or invalid, reset to current value
+    if (maxPercentageInput === "" || isNaN(parseFloat(maxPercentageInput))) {
+      setMaxPercentageInput(maxPercentage.toString());
+    } else {
+      const num = parseFloat(maxPercentageInput);
+      if (num < 0 || num > 1000) {
+        setMaxPercentageInput(maxPercentage.toString());
+      }
+    }
+  };
+
+  const handleMinPercentageChange = (value: string) => {
+    // Update input value immediately to allow clearing
+    setMinPercentageInput(value);
+    
+    // Allow empty string while typing
+    if (value === "" || value === "-") {
+      return;
+    }
+    
+    const num = parseFloat(value);
+    if (!isNaN(num) && num >= 0 && num <= 1000) {
+      const intNum = Math.round(num);
+      setMinPercentage(intNum);
+      localStorage.setItem("minPercentage", intNum.toString());
+      // Trigger a custom event to notify calculator
+      window.dispatchEvent(new CustomEvent("minPercentageChanged", { detail: intNum }));
+    }
+  };
+
+  const handleMinPercentageBlur = () => {
+    // If empty or invalid, reset to current value
+    if (minPercentageInput === "" || isNaN(parseFloat(minPercentageInput))) {
+      setMinPercentageInput(minPercentage.toString());
+    } else {
+      const num = parseFloat(minPercentageInput);
+      if (num < 0 || num > 1000) {
+        setMinPercentageInput(minPercentage.toString());
+      }
     }
   };
 
@@ -128,16 +192,46 @@ export function Settings() {
               <Label htmlFor="max-percentage">Maximum Percentage</Label>
               <Input
                 id="max-percentage"
-                type="number"
-                min="100"
-                max="500"
-                value={maxPercentage}
+                type="text"
+                value={maxPercentageInput}
                 onChange={(e) => handleMaxPercentageChange(e.target.value)}
+                onBlur={handleMaxPercentageBlur}
                 placeholder="100"
+                className={minPercentage > maxPercentage ? "border-destructive" : ""}
               />
-              <p className="text-xs text-muted-foreground">
-                The highest percentage to calculate (default: 100%)
-              </p>
+              {minPercentage > maxPercentage && (
+                <p className="text-xs text-destructive font-medium">
+                  ⚠️ Maximum cannot be less than minimum. Calculations will not work correctly.
+                </p>
+              )}
+              {minPercentage <= maxPercentage && (
+                <p className="text-xs text-muted-foreground">
+                  The highest percentage to calculate (default: 100%)
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="min-percentage">Minimum Percentage</Label>
+              <Input
+                id="min-percentage"
+                type="text"
+                value={minPercentageInput}
+                onChange={(e) => handleMinPercentageChange(e.target.value)}
+                onBlur={handleMinPercentageBlur}
+                placeholder="0"
+                className={minPercentage > maxPercentage ? "border-destructive" : ""}
+              />
+              {minPercentage > maxPercentage && (
+                <p className="text-xs text-destructive font-medium">
+                  ⚠️ Minimum cannot be greater than maximum. Calculations will not work correctly.
+                </p>
+              )}
+              {minPercentage <= maxPercentage && (
+                <p className="text-xs text-muted-foreground">
+                  The lowest percentage to calculate (default: 0%)
+                </p>
+              )}
             </div>
 
             <div className="flex items-center justify-between space-x-2">
