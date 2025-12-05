@@ -48,7 +48,7 @@ export function Help() {
             <div className="pt-4 border-t space-y-3">
               <h3 className="text-sm font-semibold">Add to Home Screen</h3>
               <p className="text-xs text-muted-foreground">
-                To add CardCalc to your iOS home screen, tap the Share button in Safari, then select "Add to Home Screen". This lets you access CardCalc like a native app with one tap.
+                To add CardCalc to your iOS home screen, tap the Share button in Safari, then select &quot;Add to Home Screen&quot;. This lets you access CardCalc like a native app with one tap.
               </p>
             </div>
 
