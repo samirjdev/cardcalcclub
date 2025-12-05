@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Settings as SettingsIcon, Github } from "lucide-react";
+import { Settings as SettingsIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -60,10 +60,27 @@ export function Settings() {
     document.documentElement.classList.add(newTheme);
     localStorage.setItem("theme", newTheme);
     
+    // Update theme-color meta tag for iOS
+    const themeColorMap: Record<ThemeMode, string> = {
+      light: "#ffffff",
+      night: "#0f172a",
+      dark: "#000000",
+      tsg: "#1a3d47"
+    };
+    const themeColor = themeColorMap[newTheme];
+    let metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (!metaThemeColor) {
+      metaThemeColor = document.createElement("meta");
+      metaThemeColor.setAttribute("name", "theme-color");
+      document.head.appendChild(metaThemeColor);
+    }
+    metaThemeColor.setAttribute("content", themeColor);
+    
     // Apply gradient background for TSG theme
     if (newTheme === "tsg") {
       document.body.style.background = "radial-gradient(ellipse at center, hsl(195 70% 20%), hsl(195 70% 12%))";
       document.body.style.minHeight = "100vh";
+      document.body.style.minHeight = "-webkit-fill-available";
     } else {
       document.body.style.background = "";
       document.body.style.minHeight = "";
@@ -248,40 +265,6 @@ export function Settings() {
               />
             </div>
 
-            <div className="pt-4 border-t space-y-4">
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground text-center">
-                  CardCalc is available on GitHub
-                </p>
-                <a
-                  href="https://github.com/samirjdev/cardcalc"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-                >
-                  <Github className="h-4 w-4" />
-                  github.com/samirjdev/cardcalc
-                </a>
-              </div>
-
-              <div className="pt-4 border-t space-y-3">
-                <h3 className="text-sm font-semibold">How to Use</h3>
-                <div className="space-y-2 text-xs text-muted-foreground">
-                  <div>
-                    <p className="font-medium mb-1">Basic Mode:</p>
-                    <p>Enter a price and select a percentage step. View all calculated percentages from 100% down to 0%.</p>
-                  </div>
-                  <div>
-                    <p className="font-medium mb-1">Expert Mode:</p>
-                    <p>Add multiple prices at once. Click on any percentage for each price to select it. The total combines all selected percentages. Swipe left/right or use arrows to navigate between prices.</p>
-                  </div>
-                  <div>
-                    <p className="font-medium mb-1">Saving:</p>
-                    <p>Save your calculations with a custom name for quick access later from the menu (top left).</p>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </DialogContent>
       </Dialog>

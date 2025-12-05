@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Calculator } from "@/components/calculator";
 import { SavedCalculationsMenu } from "@/components/saved-calculations-menu";
 import { Settings } from "@/components/settings";
+import { Help } from "@/components/help";
 import type { SavedCalculation } from "@/lib/storage";
 
 export default function Home() {
@@ -22,9 +23,9 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-start pt-20 pb-24 px-4">
+    <main className="min-h-screen flex flex-col items-center justify-start pt-20 pb-24 px-4 safe-area-inset">
       <div className="w-full max-w-4xl">
-        <h1 className="text-3xl font-bold text-center mb-8">CardCalc</h1>
+        <h1 className="text-3xl font-bold text-center mb-1">CardCalc</h1>
         
         {selectedCalc && (
           <div className="mb-6 p-4 bg-card border rounded-md">
@@ -53,6 +54,7 @@ export default function Home() {
 
       <SavedCalculationsMenu onSelect={handleSelectSaved} />
       <Settings />
+      <Help />
     </main>
   );
 }
